@@ -14,7 +14,7 @@ const VesselRow = ({ ship }) => {
       <td className="px-6 py-4 text-gray-600">{ship.ship_type}</td>
       <td className="px-6 py-4">
         <div className="flex flex-col gap-1">
-          {/* Visual Intensity Bar */}
+          {/* intensity bar */}
           <div className="bg-gray-200 rounded-full h-2 w-32 overflow-hidden">
             <div 
               className={`h-full rounded-full ${isDeficit ? 'bg-slate-700' : 'bg-green-500'}`}
@@ -49,6 +49,12 @@ function App() {
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('All')
   const [currentPage, setCurrentPage] = useState(1)
+  
+  // Pooling Simulator State
+  const [selectedShipA, setSelectedShipA] = useState('')
+  const [selectedShipB, setSelectedShipB] = useState('')
+  const [poolResult, setPoolResult] = useState(null)
+
   const itemsPerPage = 7
 
   useEffect(() => {
@@ -61,13 +67,31 @@ function App() {
       .catch(err => console.error("Error fetching data:", err))
   }, [])
 
+  // Pooling Logic
+  const handleCalculatePool = () => {
+    const shipA = ships.find(s => s.ship_id === selectedShipA)
+    const shipB = ships.find(s => s.ship_id === selectedShipB)
+
+    if (!shipA || !shipB) return
+
+    const totalBalance = parseFloat(shipA['Compliance Balance']) + parseFloat(shipB['Compliance Balance'])
+    const isCompliant = totalBalance >= 0
+
+    setPoolResult({
+      balance: totalBalance.toFixed(2),
+      status: isCompliant ? "COMPLIANT" : "NON-COMPLIANT",
+      color: isCompliant ? "text-green-600" : "text-red-600",
+      bg: isCompliant ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"
+    })
+  }
+
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center text-slate-600 text-xl animate-pulse">
       Loading Fleet Data...
     </div>
   )
 
- //filter logic
+  //filter logic
   const filteredShips = ships.filter(ship => {
     const matchesSearch = ship.ship_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           ship.ship_type.toLowerCase().includes(searchTerm.toLowerCase())
@@ -87,7 +111,7 @@ function App() {
     <div className="min-h-screen bg-slate-50 p-6 md:p-8">
       <div className="max-w-screen-xl mx-auto space-y-8">
         
-       //header 
+        {/* header */}
         <div>
           <div className="flex items-center gap-3 mb-2">
             <div className="bg-slate-800 p-2 rounded-lg shadow-sm">
@@ -102,7 +126,7 @@ function App() {
           <p className="text-slate-500">Real-time monitoring of fleet emissions and compliance status.</p>
         </div>
 
-        //summary 
+        {/* summary */}
         <div className="grid md:grid-cols-3 gap-6">
           <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
             <h3 className="text-slate-400 uppercase text-xs font-bold tracking-wider mb-2">Total Ships</h3>
@@ -118,10 +142,74 @@ function App() {
           </div>
         </div>
 
-        //fleet details
+        {/* pooling simulator */}
+        <div className="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-slate-200">
+          <div className="mb-6">
+             <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                Pooling Simulator
+             </h2>
+             <p className="text-sm text-slate-500">Select a Deficit vessel and a Surplus vessel to simulate fleet offset.</p>
+          </div>
+          
+          <div className="flex flex-col md:flex-row gap-4 items-end">
+            <div className="flex-1 w-full">
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Vessel A</label>
+              <select 
+                className="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={selectedShipA}
+                onChange={(e) => setSelectedShipA(e.target.value)}
+              >
+                <option value="">-- Select Vessel --</option>
+                {ships.map(s => (
+                  <option key={s.ship_id} value={s.ship_id}>
+                    {s.ship_id} ({s.Status}: {parseFloat(s['Compliance Balance']).toFixed(2)})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex-1 w-full">
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Vessel B</label>
+              <select 
+                className="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={selectedShipB}
+                onChange={(e) => setSelectedShipB(e.target.value)}
+              >
+                <option value="">-- Select Vessel --</option>
+                {ships.map(s => (
+                  <option key={s.ship_id} value={s.ship_id}>
+                    {s.ship_id} ({s.Status}: {parseFloat(s['Compliance Balance']).toFixed(2)})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <button 
+              onClick={handleCalculatePool}
+              className="w-full md:w-auto px-6 py-2 bg-slate-800 text-white font-semibold rounded-lg hover:bg-slate-700 transition-colors shadow-sm"
+            >
+              Simulate
+            </button>
+          </div>
+
+          {/* Result Box */}
+          {poolResult && (
+            <div className={`mt-6 p-4 rounded-lg border ${poolResult.bg} flex justify-between items-center animate-fade-in`}>
+              <div>
+                <span className="text-sm font-semibold text-slate-600 block">Net Compliance Balance</span>
+                <span className={`text-2xl font-bold ${poolResult.color}`}>{poolResult.balance}</span>
+              </div>
+              <div className={`px-4 py-1.5 rounded-md font-bold text-sm tracking-wide border ${poolResult.color.replace('text', 'border')}`}>
+                {poolResult.status}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* fleet details */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
           
-          //control bar
+          {/* control bar */}
           <div className="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
             <div>
               <h2 className="text-lg font-bold text-slate-800">Fleet Details</h2>
@@ -129,7 +217,7 @@ function App() {
             </div>
             
             <div className="flex gap-3 w-full md:w-auto">
-              //search bar
+              {/* search bar */}
               <div className="relative flex-1 md:flex-none">
                 <input
                   type="text"
@@ -143,7 +231,7 @@ function App() {
                 </svg>
               </div>
               
-              //filter dropdown
+              {/* filter dropdown */}
               <select 
                 value={statusFilter}
                 onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
@@ -175,7 +263,7 @@ function App() {
             </table>
           </div>
 
-          //page navigation
+          {/* page navigation */}
           <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
             <span className="text-sm text-slate-500">
               Showing <span className="font-medium">{startIndex + 1}</span> to <span className="font-medium">{Math.min(startIndex + itemsPerPage, filteredShips.length)}</span> of <span className="font-medium">{filteredShips.length}</span>
