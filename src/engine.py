@@ -45,3 +45,27 @@ def train_model(data_path):
 
 if __name__ == "__main__":
     train_model('data/mindx test dataset.csv')
+
+
+def compliance_data(data_path, output_path):
+    data = pd.read_csv(data_path)
+
+    # Calculate GHG Intensity
+    data['GHG Intensity'] = data['CO2_emissions'] / data['distance']
+
+    #Regulatory Compliance(5% reduction)
+    current_avg_intensity = data['GHG Intensity'].mean()
+    target_intensity = current_avg_intensity * 0.95
+
+    print(f"Current Fleet Average: {current_avg_intensity:.2f}")
+    print(f"2026 Compliance Target: {target_intensity:.2f}")
+
+    #Compliance Balance Calc
+    data['Compliance Balance'] = target_intensity - data['GHG Intensity'] 
+    data['Status'] = data['Compliance Balance'].apply(lambda x: 'Surplus' if x >= 0 else 'Deficit') 
+
+    data.to_csv(output_path, index=False)
+    print(f"Compliance data saved to {output_path}")
+
+    if __name__ == "__main__":
+        compliance_data('data/mindx test dataset.csv', 'data/processed_compliance.csv')
