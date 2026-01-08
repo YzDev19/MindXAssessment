@@ -1,0 +1,15 @@
+# Ignore Data
+data/*.csv
+data/*.xlsx
+
+# Ignore caches
+__pycache__/
+*.pyc
+
+# Ignore envs
+venv/
+env/
+.env
+
+# Ignore system files
+.DS_Store
