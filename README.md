@@ -9,9 +9,14 @@ Frontend: React + Tailwind CSS (via Vite).
 Data Processing: Pandas for GHG intensity calculations and regulatory benchmarking.
 
 ## Features
-1. Compliance Engine: Automates the calculation of Compliance Balance ($CB$) based on 2026 targets.
+1. Compliance Engine: Automates the calculation of Compliance Balance  based on 2026 targets.
 2. Predictive Modeling: Uses a Linear Regression pipeline to benchmark fuel efficiency.
 3. Pooling Simulator: Interactive widget to calculate offsets between Deficit and Surplus vessels.
+
+## Model Perfomance
+R^2 Score: 0.9950865328896986
+Current Fleet Average: 78.85
+2026 Compliance Target: 74.91
 
 ## Setup Instructions
 
